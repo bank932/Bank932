@@ -3,15 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cashflowbank - Client Portal</title>
+  <title>Cashflowbank - Institutional Client Portal</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js for Bottom Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #080c14;
+      background-color: #05080f;
       color: #0f172a;
     }
     .custom-scrollbar::-webkit-scrollbar {
@@ -28,14 +30,30 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-2 sm:p-6 bg-slate-950 text-slate-100">
 
-  <!-- Main Container Frame -->
-  <div class="w-full max-w-md bg-white text-slate-900 rounded-[32px] shadow-2xl overflow-hidden border border-slate-800 flex flex-col relative min-h-[760px]">
+  <!-- LOADING SPLASH SCREEN -->
+  <div id="splash-screen" class="fixed inset-0 bg-[#05080f] z-50 flex flex-col items-center justify-center space-y-6 transition-opacity duration-700">
+    <div class="relative flex items-center justify-center">
+      <div class="absolute w-24 h-24 rounded-full bg-blue-500/20 animate-ping"></div>
+      <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-2xl shadow-blue-500/40 relative z-10">
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+      </div>
+    </div>
+    <div class="text-center space-y-1">
+      <h2 class="text-xl font-extrabold tracking-widest text-white uppercase">CASH FLOW BANK</h2>
+      <p class="text-xs text-cyan-400 font-mono tracking-wider">Establishing Secure 256-Bit SSL Tunnel...</p>
+    </div>
+    <div class="w-48 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+      <div id="loader-bar" class="w-0 h-full bg-cyan-400 transition-all duration-700"></div>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <div class="w-full max-w-md bg-white text-slate-900 rounded-[36px] shadow-2xl overflow-hidden border border-slate-800 flex flex-col relative min-h-[820px]">
     
-    <!-- Top Header / Logo Bar -->
+    <!-- TOP HEADER -->
     <header class="bg-slate-950 px-6 py-4 flex items-center justify-between border-b border-slate-800/80 z-20">
       <div class="flex items-center gap-3">
-        <!-- SVG Bank Logo Icon -->
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white font-extrabold shadow-lg shadow-cyan-500/20 text-lg tracking-wider">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white font-extrabold shadow-lg shadow-cyan-500/20 text-lg">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         </div>
         <div>
@@ -50,32 +68,30 @@
       </div>
     </header>
 
-    <!-- Content Views Container -->
+    <!-- CONTENT VIEWS CONTAINER -->
     <div class="flex-1 p-5 sm:p-6 overflow-y-auto custom-scrollbar bg-slate-50 flex flex-col justify-between relative">
 
       <!-- VIEW 1: SIGN IN -->
       <section id="view-signin" class="space-y-6 my-auto">
         <div>
           <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Client Portal Sign In</h2>
-          <p class="text-sm text-slate-500 mt-1">Access your secure accounts and dashboards</p>
+          <p class="text-sm text-slate-500 mt-1">Access your institutional accounts and dashboards</p>
         </div>
 
         <form id="signin-form" class="space-y-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Account Number</label>
-            <div class="relative">
-              <input type="text" id="login-accnum" required placeholder="e.g. 4582588676" maxlength="10"
-                class="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition text-sm shadow-sm">
-            </div>
+            <input type="text" id="login-accnum" required placeholder="e.g. 4582588676" maxlength="10"
+              class="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 transition text-sm shadow-sm">
           </div>
 
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Portal Password</label>
             <input type="password" id="login-password" required placeholder="••••••••"
-              class="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition text-sm shadow-sm">
+              class="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 transition text-sm shadow-sm">
           </div>
 
-          <button type="submit" id="btn-signin"
+          <button type="submit"
             class="w-full py-4 px-6 bg-slate-950 hover:bg-slate-900 active:scale-[0.99] text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
             <span>Secure Sign In</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
@@ -90,11 +106,11 @@
         </div>
       </section>
 
-      <!-- VIEW 2: REGISTER / OPEN ACCOUNT -->
+      <!-- VIEW 2: REGISTER -->
       <section id="view-signup" class="space-y-4 my-auto hidden">
         <div>
           <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Open New Account</h2>
-          <p class="text-xs text-slate-500 mt-1">Join Cash Flow Bank for institutional-grade banking</p>
+          <p class="text-xs text-slate-500 mt-1">Join Cash Flow Bank for elite private banking</p>
         </div>
 
         <form id="signup-form" class="space-y-3">
@@ -123,28 +139,19 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Initial Account Type</label>
-            <select id="reg-accounttype" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:ring-2 focus:ring-blue-600 outline-none shadow-sm">
-              <option value="Checking Account">Checking Account</option>
-              <option value="Savings Account">Savings Account</option>
-              <option value="Business Account">Business Account</option>
-            </select>
-          </div>
-
-          <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Secure Password</label>
             <input type="password" id="reg-password" required placeholder="••••••••" minlength="6"
               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:ring-2 focus:ring-blue-600 outline-none shadow-sm">
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">4-Digit Authorization PIN</label>
+            <label class="block text-xs font-bold text-slate-700 mb-1">4-Digit Security PIN</label>
             <input type="text" id="reg-pin" maxlength="4" pattern="\d{4}" required placeholder="1234"
               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:ring-2 focus:ring-blue-600 outline-none shadow-sm">
           </div>
 
-          <button type="submit" id="btn-signup"
-            class="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-xl shadow-lg transition text-sm mt-2">
+          <button type="submit"
+            class="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl shadow-lg transition text-sm mt-2">
             Submit Account Application
           </button>
         </form>
@@ -157,23 +164,23 @@
         </div>
       </section>
 
-      <!-- VIEW 3: APPLICATION STATUS (PENDING / DECLINED) -->
+      <!-- VIEW 3: APPLICATION STATUS -->
       <section id="view-status" class="space-y-6 text-center py-8 my-auto hidden">
-        <div id="status-icon-container" class="w-20 h-20 mx-auto rounded-full bg-amber-50 flex items-center justify-center border-4 border-amber-100 text-amber-500 shadow-inner">
+        <div class="w-20 h-20 mx-auto rounded-full bg-amber-50 flex items-center justify-center border-4 border-amber-100 text-amber-500 shadow-inner">
           <svg class="w-10 h-10 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
 
         <div>
           <h2 id="status-title" class="text-2xl font-bold text-slate-900">Application Under Review</h2>
-          <p id="status-desc" class="text-sm text-slate-500 mt-2 max-w-xs mx-auto leading-relaxed">
-            Your application is currently being reviewed by our compliance team. You will gain access once approved.
+          <p class="text-sm text-slate-500 mt-2 max-w-xs mx-auto leading-relaxed">
+            Your application is currently being reviewed by our compliance team.
           </p>
         </div>
 
         <div class="p-4 bg-slate-100 rounded-2xl border border-slate-200 text-left text-xs space-y-2">
           <div class="flex justify-between"><span class="text-slate-500">Applicant:</span> <span id="status-user-name" class="font-bold text-slate-800">--</span></div>
           <div class="flex justify-between"><span class="text-slate-500">Account ID:</span> <span id="status-user-id" class="font-mono font-bold text-slate-800">--</span></div>
-          <div class="flex justify-between"><span class="text-slate-500">Current Status:</span> <span id="status-badge-text" class="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded">PENDING</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Status:</span> <span id="status-badge-text" class="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded">PENDING</span></div>
         </div>
 
         <button id="btn-status-logout" class="px-6 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition">
@@ -181,10 +188,10 @@
         </button>
       </section>
 
-      <!-- VIEW 4: USER DASHBOARD (REPLICATING SCREENSHOT 8) -->
-      <section id="view-dashboard" class="space-y-4 hidden">
+      <!-- VIEW 4: MAIN DASHBOARD (Exact Match to Screenshot) -->
+      <section id="view-dashboard" class="space-y-5 hidden">
         
-        <!-- User Top Profile Strip -->
+        <!-- Profile Banner -->
         <div class="flex items-center justify-between p-3 bg-white rounded-2xl border border-slate-200/80 shadow-sm">
           <div class="flex items-center gap-3">
             <div id="dash-avatar-box" class="w-12 h-12 rounded-full bg-slate-200 border-2 border-slate-300 overflow-hidden flex items-center justify-center text-slate-600 font-bold">
@@ -196,24 +203,20 @@
             </div>
           </div>
           <div class="text-right">
-            <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-extrabold rounded-full tracking-wider uppercase block">
-              ACTIVE
-            </span>
+            <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-extrabold rounded-full tracking-wider uppercase block">ACTIVE</span>
             <span id="dash-created-date" class="text-[10px] text-slate-400 font-medium block mt-1">Since: 2024-01-15</span>
           </div>
         </div>
 
-        <!-- Checking Balance Dark Card (Ref: image_8.png) -->
+        <!-- Checking Balance Debit Card (Ref: Screenshot) -->
         <div class="relative bg-gradient-to-b from-[#111927] to-[#0A0F18] text-white p-5 rounded-3xl shadow-xl border border-slate-800 overflow-hidden space-y-4">
           <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-          <!-- Card Header -->
           <div class="flex justify-between items-start">
             <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Checking Balance</span>
             <span class="text-xs font-black tracking-widest text-slate-200 uppercase">DEBIT CARD</span>
           </div>
 
-          <!-- Balance Display & Eye Toggle -->
           <div class="flex items-center gap-3">
             <span id="dash-balance" class="text-3xl font-extrabold text-white tracking-tight">$500,000.00</span>
             <button id="toggle-balance-btn" class="p-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition">
@@ -223,7 +226,6 @@
 
           <hr class="border-slate-800">
 
-          <!-- Card Key Details -->
           <div class="space-y-1.5 text-xs font-mono">
             <div class="flex justify-between text-slate-400">
               <span class="text-[10px] tracking-wider uppercase">ROUTING (ABA):</span>
@@ -245,8 +247,8 @@
           </div>
         </div>
 
-        <!-- Action Buttons (Transfer, Deposit, History) matching image_8.png -->
-        <div class="grid grid-cols-3 gap-3 pt-1">
+        <!-- Action Buttons matching Reference (Transfer, Deposit, History) -->
+        <div class="grid grid-cols-3 gap-3">
           <button id="btn-action-transfer" class="p-3 bg-white border border-slate-200 rounded-2xl flex flex-col items-center gap-2 hover:bg-slate-100 transition shadow-sm active:scale-95">
             <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 11l5-5m0 0l5 5m-5-5v12"/></svg>
@@ -269,113 +271,70 @@
           </button>
         </div>
 
-        <!-- Cash Flow Analytics Chart (Ref: image_5.png) -->
-        <div class="p-4 bg-[#0e1424] rounded-3xl border border-slate-800 text-white space-y-3">
-          <div class="flex justify-between items-start">
+        <!-- FINANCIAL ANALYSIS AT THE BOTTOM -->
+        <div class="p-4 bg-[#0e1424] rounded-3xl border border-slate-800 text-white space-y-4">
+          <div class="flex justify-between items-center">
             <div>
-              <h4 class="font-bold text-sm text-white">Cash Flow Analytics</h4>
-              <p class="text-[11px] text-slate-400">Monthly deposit and liquidity trends</p>
+              <h4 class="font-bold text-sm text-white">Financial Analysis</h4>
+              <p class="text-[11px] text-slate-400">Cash flow trajectories & spending</p>
             </div>
             <span class="px-2.5 py-1 bg-emerald-950/80 border border-emerald-800 text-emerald-400 text-[10px] font-bold rounded-full flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Real-Time Sync
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live Sync
             </span>
           </div>
 
-          <!-- SVG Chart Area -->
-          <div class="relative h-36 pt-2">
-            <svg class="w-full h-full overflow-visible" viewBox="0 0 300 120" preserveAspectRatio="none">
-              <!-- Grid Lines -->
-              <line x1="0" y1="0" x2="300" y2="0" stroke="#1e293b" stroke-dasharray="3 3"/>
-              <line x1="0" y1="30" x2="300" y2="30" stroke="#1e293b" stroke-dasharray="3 3"/>
-              <line x1="0" y1="60" x2="300" y2="60" stroke="#1e293b" stroke-dasharray="3 3"/>
-              <line x1="0" y1="90" x2="300" y2="90" stroke="#1e293b" stroke-dasharray="3 3"/>
-
-              <!-- Gradient Fill under curve -->
-              <defs>
-                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#ef4444" stop-opacity="0.3"/>
-                  <stop offset="100%" stop-color="#ef4444" stop-opacity="0.0"/>
-                </linearGradient>
-              </defs>
-              <path d="M 15 80 Q 75 60 135 50 T 225 35 L 285 105 L 15 105 Z" fill="url(#chartGrad)"/>
-              
-              <!-- Trend Curve Line -->
-              <path d="M 15 80 Q 75 60 135 50 T 225 35 L 285 105" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
-
-              <!-- Data Nodes -->
-              <circle cx="15" cy="80" r="4" fill="#ef4444" stroke="#ffffff" stroke-width="2"/>
-              <circle cx="75" cy="68" r="4" fill="#ef4444" stroke="#ffffff" stroke-width="2"/>
-              <circle cx="135" cy="50" r="4" fill="#ef4444" stroke="#ffffff" stroke-width="2"/>
-              <circle cx="180" cy="42" r="4" fill="#ef4444" stroke="#ffffff" stroke-width="2"/>
-              <circle cx="225" cy="35" r="5" fill="#ef4444" stroke="#ffffff" stroke-width="2"/>
-              <circle cx="285" cy="105" r="5" fill="#ef4444" stroke="#ffffff" stroke-width="2"/>
-            </svg>
-
-            <!-- X-Axis Labels -->
-            <div class="flex justify-between text-[10px] text-slate-400 font-mono mt-1 px-1">
-              <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
-            </div>
+          <!-- Chart.js Canvas -->
+          <div class="h-44 w-full relative">
+            <canvas id="analysisChart"></canvas>
           </div>
         </div>
 
       </section>
 
-      <!-- VIEW 5: TRANSFER VIEW (Ref: image_9.png) -->
+      <!-- VIEW 5: TRANSFER VIEW -->
       <section id="view-transfer" class="space-y-4 hidden">
         <div class="flex items-center justify-between">
           <h2 class="text-xl font-bold text-slate-900 tracking-tight">Make Transfer</h2>
-          <button id="back-to-dash-btn" class="text-xs text-blue-600 font-bold hover:underline flex items-center gap-1">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-            Dashboard
-          </button>
+          <button id="back-to-dash-btn" class="text-xs text-blue-600 font-bold hover:underline">Dashboard</button>
         </div>
 
         <form id="transfer-form" class="space-y-3.5 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Transfer Network</label>
-            <select id="tr-network" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-xs focus:ring-2 focus:ring-blue-600 outline-none">
-              <option value="Local Domestic Transfer (ACH / Wire)">Local Domestic Transfer (ACH / Wire)</option>
-              <option value="International SWIFT Wire">International SWIFT Wire</option>
-              <option value="Instant Peer Transfer">Instant Peer Transfer</option>
+            <select class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-xs">
+              <option>Local Domestic Transfer (ACH / Wire)</option>
+              <option>International SWIFT Wire</option>
             </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Source Account</label>
-            <input type="text" readonly value="Checking Account" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 text-xs font-semibold">
           </div>
 
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Beneficiary Full Name</label>
             <input type="text" id="tr-beneficiary" required placeholder="e.g. Sarah Jenkins"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-xs outline-none focus:ring-2 focus:ring-blue-600">
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-xs outline-none">
           </div>
 
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Recipient Bank Name</label>
             <input type="text" id="tr-bankname" required placeholder="e.g. Chase Bank / Barclays"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-xs outline-none focus:ring-2 focus:ring-blue-600">
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-xs outline-none">
           </div>
 
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Account Number / IBAN</label>
             <input type="text" id="tr-accnum" required placeholder="e.g. 0098765432"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-xs font-mono outline-none focus:ring-2 focus:ring-blue-600">
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-xs font-mono outline-none">
           </div>
 
           <div>
-            <div class="flex justify-between items-center mb-1">
-              <label class="text-xs font-bold text-slate-700">Transfer Amount ($)</label>
-              <span id="tr-limit-label" class="text-[10px] text-slate-500 font-semibold">Limit: $550,000.00</span>
-            </div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Transfer Amount ($)</label>
             <input type="number" step="0.01" id="tr-amount" required placeholder="0.00"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-600">
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm font-bold outline-none">
           </div>
 
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">4-Digit Security PIN</label>
             <input type="password" maxlength="4" pattern="\d{4}" id="tr-pin" required placeholder="••••"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-xs tracking-widest outline-none focus:ring-2 focus:ring-blue-600">
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-xs tracking-widest outline-none">
           </div>
 
           <button type="submit" class="w-full py-3.5 bg-slate-950 hover:bg-slate-900 text-white font-bold rounded-xl shadow-lg transition text-xs mt-2">
@@ -384,7 +343,7 @@
         </form>
       </section>
 
-      <!-- VIEW 6: PROFILE SETUP & SETTINGS -->
+      <!-- VIEW 6: PROFILE SETUP -->
       <section id="view-profile" class="space-y-4 hidden">
         <div class="flex items-center justify-between">
           <h2 class="text-xl font-bold text-slate-900 tracking-tight">Profile & Avatar</h2>
@@ -392,14 +351,14 @@
         </div>
 
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 text-center">
-          <div class="relative w-24 h-24 mx-auto rounded-full border-4 border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center">
+          <div class="w-24 h-24 mx-auto rounded-full border-4 border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center">
             <img id="profile-preview-img" src="" class="w-full h-full object-cover hidden">
             <svg id="profile-preview-svg" class="w-12 h-12 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
           </div>
 
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-2">Upload Custom Avatar Image</label>
-            <input type="file" id="avatar-file-input" accept="image/*" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+            <input type="file" id="avatar-file-input" accept="image/*" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 cursor-pointer">
           </div>
 
           <button id="save-profile-btn" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl text-xs shadow hover:bg-blue-500 transition">
@@ -408,7 +367,7 @@
         </div>
       </section>
 
-      <!-- VIEW 7: HISTORY & TRANSACTIONS -->
+      <!-- VIEW 7: HISTORY -->
       <section id="view-history" class="space-y-4 hidden">
         <div class="flex items-center justify-between">
           <h2 class="text-xl font-bold text-slate-900 tracking-tight">Transaction Ledger</h2>
@@ -416,12 +375,11 @@
         </div>
         <div id="transactions-list" class="space-y-2.5">
           <div class="p-4 bg-white rounded-2xl border border-slate-200 text-xs text-slate-500 text-center">
-            No recent transaction records found.
+            No recent transactions found.
           </div>
         </div>
       </section>
 
-      <!-- Footer Info -->
       <div class="pt-4 text-center text-[10px] text-slate-400 border-t border-slate-200 mt-4">
         CASH FLOW BANK N.A. MEMBER FDIC • 256-BIT SSL ENCRYPTION
       </div>
@@ -429,7 +387,7 @@
     </div>
   </div>
 
-  <!-- NAVIGATION DRAWER (Ref: image_4.png) -->
+  <!-- NAVIGATION DRAWER -->
   <div id="drawer-backdrop" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-40 hidden transition-opacity"></div>
   <div id="nav-drawer" class="fixed top-0 left-0 bottom-0 w-80 bg-white text-slate-900 z-50 transform -translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
     <div class="p-5 bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
@@ -443,44 +401,25 @@
     <div class="flex-1 overflow-y-auto p-4 space-y-6 text-xs font-semibold text-slate-700">
       <div class="space-y-1">
         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3">Main</span>
-        <button onclick="navigateDrawer('dashboard')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 text-slate-900">
-          <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-          Dashboard
-        </button>
-        <button onclick="navigateDrawer('history')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100">
-          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          Account Summary
-        </button>
-        <button onclick="navigateDrawer('transfer')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100">
-          <div class="flex items-center gap-3">
-            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-            Transfer
-          </div>
-          <span class="text-slate-400">&gt;</span>
-        </button>
+        <button onclick="navigateDrawer('dashboard')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 text-slate-900">Dashboard</button>
+        <button onclick="navigateDrawer('history')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100">Account Summary</button>
+        <button onclick="navigateDrawer('transfer')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100">Transfer</button>
       </div>
 
       <div class="space-y-1">
         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3">Account</span>
-        <button onclick="navigateDrawer('profile')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100">
-          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-          Profile & Avatar
-        </button>
+        <button onclick="navigateDrawer('profile')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100">Profile & Avatar</button>
       </div>
     </div>
 
     <div class="p-4 border-t border-slate-200">
-      <button id="drawer-signout" class="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 font-bold text-xs">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-        Sign Out
-      </button>
+      <button id="drawer-signout" class="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 font-bold text-xs">Sign Out</button>
     </div>
   </div>
 
-  <!-- Toast Container -->
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
 
-  <!-- Firebase Script -->
+  <!-- FIREBASE & APP LOGIC -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, setDoc, getDocs, collection, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -501,18 +440,26 @@
     let balanceVisible = true;
     let userUnsubscribe = null;
     let uploadedAvatarBase64 = "";
+    let analysisChartInstance = null;
+
+    // Splash Loader Animation
+    window.addEventListener('load', () => {
+      setTimeout(() => { document.getElementById('loader-bar').style.width = '100%'; }, 200);
+      setTimeout(() => {
+        const splash = document.getElementById('splash-screen');
+        splash.classList.add('opacity-0');
+        setTimeout(() => splash.remove(), 700);
+      }, 1000);
+    });
 
     function showToast(message, type = 'info') {
       const toast = document.createElement('div');
       const bg = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-emerald-600' : 'bg-slate-900';
-      toast.className = `${bg} text-white px-4 py-3 rounded-xl shadow-lg text-xs font-medium transition-all duration-300 opacity-0 transform translate-y-2 flex items-center gap-2`;
-      toast.innerHTML = `<span>${message}</span>`;
+      toast.className = `${bg} text-white px-4 py-3 rounded-xl shadow-lg text-xs font-medium transition-all duration-300 opacity-0 transform translate-y-2`;
+      toast.innerText = message;
       document.getElementById('toast-container').appendChild(toast);
-      setTimeout(() => { toast.classList.remove('opacity-0', 'translate-y-2'); }, 10);
-      setTimeout(() => {
-        toast.classList.add('opacity-0');
-        setTimeout(() => toast.remove(), 300);
-      }, 3500);
+      setTimeout(() => toast.classList.remove('opacity-0', 'translate-y-2'), 10);
+      setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.remove(), 300); }, 3500);
     }
 
     function switchView(target) {
@@ -522,8 +469,9 @@
       document.getElementById(target).classList.remove('hidden');
 
       const menuBtn = document.getElementById('menu-drawer-btn');
-      if (target === 'view-dashboard' || target === 'view-transfer' || target === 'view-profile' || target === 'view-history') {
+      if (['view-dashboard', 'view-transfer', 'view-profile', 'view-history'].includes(target)) {
         menuBtn.classList.remove('hidden');
+        if (target === 'view-dashboard') setTimeout(initChart, 100);
       } else {
         menuBtn.classList.add('hidden');
       }
@@ -539,21 +487,14 @@
 
     const drawer = document.getElementById('nav-drawer');
     const backdrop = document.getElementById('drawer-backdrop');
-
-    function openDrawer() {
-      drawer.classList.remove('-translate-x-full');
-      backdrop.classList.remove('hidden');
-    }
-    function closeDrawer() {
-      drawer.classList.add('-translate-x-full');
-      backdrop.classList.add('hidden');
-    }
+    function openDrawer() { drawer.classList.remove('-translate-x-full'); backdrop.classList.remove('hidden'); }
+    function closeDrawer() { drawer.classList.add('-translate-x-full'); backdrop.classList.add('hidden'); }
 
     document.getElementById('menu-drawer-btn').onclick = openDrawer;
     document.getElementById('drawer-close').onclick = closeDrawer;
     document.getElementById('drawer-backdrop').onclick = closeDrawer;
 
-    // ACCOUNT NUMBER LOGIN
+    // Login
     document.getElementById('signin-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const accNum = document.getElementById('login-accnum').value.trim();
@@ -564,9 +505,7 @@
         let found = null;
         querySnapshot.forEach(docSnap => {
           const u = docSnap.data();
-          if (u.accountNumber === accNum && u.password === password) {
-            found = u;
-          }
+          if (u.accountNumber === accNum && u.password === password) found = u;
         });
 
         if (found) {
@@ -580,13 +519,12 @@
       }
     });
 
-    // SIGN UP
+    // Signup
     document.getElementById('signup-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fullName = document.getElementById('reg-fullname').value.trim();
       const email = document.getElementById('reg-email').value.trim();
       const country = document.getElementById('reg-country').value;
-      const accountType = document.getElementById('reg-accounttype').value;
       const password = document.getElementById('reg-password').value;
       const pin = document.getElementById('reg-pin').value;
 
@@ -599,7 +537,6 @@
         fullName,
         email,
         country,
-        accountType,
         password,
         pin,
         balance: 500000.00,
@@ -627,7 +564,7 @@
 
       userUnsubscribe = onSnapshot(doc(db, "users", accNum), (docSnap) => {
         if (!docSnap.exists()) {
-          showToast("Account was removed.", "error");
+          showToast("Account removed.", "error");
           switchView('view-signin');
           return;
         }
@@ -635,30 +572,16 @@
         const data = docSnap.data();
         currentUserData = data;
 
-        if (data.status === 'PENDING') {
+        if (data.status === 'PENDING' || data.status === 'DECLINED') {
           document.getElementById('status-user-name').innerText = data.fullName;
           document.getElementById('status-user-id').innerText = data.accountNumber;
-          document.getElementById('status-title').innerText = "Application Under Review";
-          document.getElementById('status-desc').innerText = "Your account application is awaiting compliance verification.";
-          document.getElementById('status-badge-text').innerText = "PENDING";
-          switchView('view-status');
-        } else if (data.status === 'DECLINED') {
-          document.getElementById('status-user-name').innerText = data.fullName;
-          document.getElementById('status-user-id').innerText = data.accountNumber;
-          document.getElementById('status-title').innerText = "Application Declined";
-          document.getElementById('status-desc').innerText = "Your account application could not be approved at this time.";
-          document.getElementById('status-badge-text').innerText = "DECLINED";
+          document.getElementById('status-badge-text').innerText = data.status;
           switchView('view-status');
         } else if (data.status === 'ACTIVE') {
           updateDashboardUI(data);
-          if (document.getElementById('view-dashboard').classList.contains('hidden') && 
-              !document.getElementById('view-transfer').classList.contains('hidden') === false &&
-              !document.getElementById('view-profile').classList.contains('hidden') === false &&
-              !document.getElementById('view-history').classList.contains('hidden') === false) {
-            // Do not force switch if user is actively navigating subviews
-          } else if (document.getElementById('view-signin').classList.contains('hidden') === false ||
-                     document.getElementById('view-signup').classList.contains('hidden') === false ||
-                     document.getElementById('view-status').classList.contains('hidden') === false) {
+          if (!document.getElementById('view-signin').classList.contains('hidden') ||
+              !document.getElementById('view-signup').classList.contains('hidden') ||
+              !document.getElementById('view-status').classList.contains('hidden')) {
             switchView('view-dashboard');
           }
         }
@@ -673,21 +596,11 @@
       const formattedBalance = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(data.balance || 0);
       document.getElementById('dash-balance').innerText = balanceVisible ? formattedBalance : '••••••••';
       
-      document.getElementById('dash-routing').innerText = data.routing || '021000021';
-      document.getElementById('dash-swift').innerText = data.swift || 'CSFLUS33XXX';
-      document.getElementById('dash-iban').innerText = data.iban || 'US64 CSFL 0210 0000 1000';
-      document.getElementById('dash-limit').innerText = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(data.dailyLimit || 1000000);
-
-      // Avatar
-      const imgEl = document.getElementById('profile-preview-img');
-      const svgEl = document.getElementById('profile-preview-svg');
-      const avatarBox = document.getElementById('dash-avatar-box');
-
       if (data.avatar) {
-        avatarBox.innerHTML = `<img src="${data.avatar}" class="w-full h-full object-cover">`;
-        imgEl.src = data.avatar;
-        imgEl.classList.remove('hidden');
-        svgEl.classList.add('hidden');
+        document.getElementById('dash-avatar-box').innerHTML = `<img src="${data.avatar}" class="w-full h-full object-cover">`;
+        document.getElementById('profile-preview-img').src = data.avatar;
+        document.getElementById('profile-preview-img').classList.remove('hidden');
+        document.getElementById('profile-preview-svg').classList.add('hidden');
       }
 
       // Transactions Ledger
@@ -707,12 +620,44 @@
       }
     }
 
+    function initChart() {
+      const ctx = document.getElementById('analysisChart');
+      if (!ctx) return;
+      if (analysisChartInstance) analysisChartInstance.destroy();
+
+      analysisChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          datasets: [{
+            label: 'Liquidity Trend',
+            data: [12000, 15500, 19000, 21000, 22500, currentUserData ? currentUserData.balance / 20 : 25000],
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 3,
+            pointRadius: 4,
+            pointBackgroundColor: '#ef4444'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
     document.getElementById('toggle-balance-btn').addEventListener('click', () => {
       balanceVisible = !balanceVisible;
       if (currentUserData) updateDashboardUI(currentUserData);
     });
 
-    // AVATAR FILE UPLOAD
     document.getElementById('avatar-file-input').addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
@@ -730,16 +675,13 @@
     document.getElementById('save-profile-btn').addEventListener('click', async () => {
       if (!currentUserData) return;
       try {
-        await updateDoc(doc(db, "users", currentUserData.accountNumber), {
-          avatar: uploadedAvatarBase64
-        });
+        await updateDoc(doc(db, "users", currentUserData.accountNumber), { avatar: uploadedAvatarBase64 });
         showToast("Profile avatar updated!", "success");
       } catch (err) {
         showToast("Error updating avatar: " + err.message, "error");
       }
     });
 
-    // TRANSFER SUBMIT
     document.getElementById('transfer-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!currentUserData) return;
@@ -749,31 +691,16 @@
       const beneficiary = document.getElementById('tr-beneficiary').value;
       const bankName = document.getElementById('tr-bankname').value;
 
-      if (pin !== currentUserData.pin) {
-        showToast("Invalid 4-digit security PIN.", "error");
-        return;
-      }
-
-      if (amount > currentUserData.balance) {
-        showToast("Insufficient available balance.", "error");
-        return;
-      }
+      if (pin !== currentUserData.pin) { showToast("Invalid security PIN.", "error"); return; }
+      if (amount > currentUserData.balance) { showToast("Insufficient balance.", "error"); return; }
 
       const newBalance = currentUserData.balance - amount;
-      const newTx = {
-        title: `Transfer to ${beneficiary}`,
-        bank: bankName,
-        amount: amount,
-        type: 'debit',
-        date: new Date().toLocaleDateString()
-      };
-
-      const updatedTxs = [newTx, ...(currentUserData.transactions || [])];
+      const newTx = { title: `Transfer to ${beneficiary}`, bank: bankName, amount, type: 'debit', date: new Date().toLocaleDateString() };
 
       try {
         await updateDoc(doc(db, "users", currentUserData.accountNumber), {
           balance: newBalance,
-          transactions: updatedTxs
+          transactions: [newTx, ...(currentUserData.transactions || [])]
         });
         showToast("Transfer executed successfully!", "success");
         switchView('view-dashboard');
@@ -782,28 +709,18 @@
       }
     });
 
-    // BUTTONS & NAVIGATION EVENTS
     document.getElementById('go-to-signup').onclick = () => switchView('view-signup');
     document.getElementById('go-to-signin').onclick = () => switchView('view-signin');
-    document.getElementById('btn-status-logout').onclick = () => {
-      if (userUnsubscribe) userUnsubscribe();
-      switchView('view-signin');
-    };
-    document.getElementById('drawer-signout').onclick = () => {
-      if (userUnsubscribe) userUnsubscribe();
-      currentUserData = null;
-      showToast("Signed out successfully");
-      switchView('view-signin');
-    };
+    document.getElementById('btn-status-logout').onclick = () => { if(userUnsubscribe) userUnsubscribe(); switchView('view-signin'); };
+    document.getElementById('drawer-signout').onclick = () => { if(userUnsubscribe) userUnsubscribe(); currentUserData=null; switchView('view-signin'); };
 
     document.getElementById('btn-action-transfer').onclick = () => switchView('view-transfer');
-    document.getElementById('btn-action-deposit').onclick = () => showToast("Deposit instructions sent to email.");
+    document.getElementById('btn-action-deposit').onclick = () => showToast("Deposit routing instructions sent.");
     document.getElementById('btn-action-history').onclick = () => switchView('view-history');
 
     document.getElementById('back-to-dash-btn').onclick = () => switchView('view-dashboard');
     document.getElementById('back-to-dash-btn2').onclick = () => switchView('view-dashboard');
     document.getElementById('back-to-dash-btn3').onclick = () => switchView('view-dashboard');
-
   </script>
 </body>
 </html>
