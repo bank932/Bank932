@@ -1,726 +1,1058 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cashflowbank - Institutional Client Portal</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js for Bottom Analytics -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Google Fonts: Plus Jakarta Sans -->
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #05080f;
-      color: #0f172a;
-    }
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 5px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: rgba(0,0,0,0.05);
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(0,0,0,0.15);
-      border-radius: 10px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tactical Strike: Mobile Royale (SVG Engine)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #06080c;
+            font-family: 'Rajdhani', 'Segoe UI', Roboto, Helvetica, sans-serif;
+            color: #fff;
+        }
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: #090e15;
+            overflow: hidden;
+        }
+        svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Tactical CODM / Blood Strike HUD Overlays */
+        .hud-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 16px;
+            z-index: 10;
+        }
+
+        .hud-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .hud-top-left {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .squad-status {
+            background: rgba(10, 14, 22, 0.85);
+            border: 1px solid rgba(0, 243, 255, 0.4);
+            border-left: 4px solid #00f3ff;
+            padding: 8px 14px;
+            clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%);
+            backdrop-filter: blur(6px);
+        }
+
+        .squad-title {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #00f3ff;
+            font-weight: 700;
+        }
+
+        .squad-count {
+            font-size: 22px;
+            font-weight: 900;
+            font-family: monospace;
+            color: #fff;
+        }
+
+        .match-telemetry {
+            background: rgba(10, 14, 22, 0.85);
+            border: 1px solid rgba(255, 170, 0, 0.4);
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-align: center;
+            backdrop-filter: blur(6px);
+        }
+
+        .telemetry-label {
+            font-size: 9px;
+            color: #ffaa00;
+            letter-spacing: 1.5px;
+            font-weight: bold;
+        }
+
+        .telemetry-val {
+            font-size: 18px;
+            font-weight: 800;
+            font-family: monospace;
+        }
+
+        .minimap-container {
+            width: 180px;
+            height: 180px;
+            background: rgba(8, 12, 18, 0.9);
+            border: 2px solid rgba(0, 243, 255, 0.5);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+        }
+
+        .hud-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            width: 100%;
+        }
+
+        .player-status-card {
+            background: linear-gradient(135deg, rgba(12, 18, 28, 0.9), rgba(5, 8, 14, 0.95));
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-bottom: 3px solid #00f3ff;
+            padding: 12px 18px;
+            width: 260px;
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 92% 100%, 0 100%);
+            pointer-events: auto;
+        }
+
+        .health-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            margin-top: 6px;
+            position: relative;
+            transform: skewX(-15deg);
+            overflow: hidden;
+        }
+
+        .health-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00f3ff, #0066ff);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        .shield-bar-bg {
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            margin-top: 4px;
+            position: relative;
+            transform: skewX(-15deg);
+            overflow: hidden;
+        }
+
+        .shield-bar-fill {
+            height: 100%;
+            background: #ffaa00;
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        .weapon-hud-card {
+            background: rgba(10, 15, 24, 0.9);
+            border: 1px solid rgba(255, 170, 0, 0.5);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+            pointer-events: auto;
+        }
+
+        .weapon-name {
+            font-size: 16px;
+            font-weight: 800;
+            color: #ffaa00;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .weapon-ammo {
+            font-size: 26px;
+            font-family: monospace;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        /* On-Screen Mobile Action Controls */
+        .mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 30px;
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        .virtual-joystick {
+            width: 130px;
+            height: 130px;
+            background: rgba(0, 243, 255, 0.08);
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            border-radius: 50%;
+            position: relative;
+            pointer-events: auto;
+            touch-action: none;
+        }
+
+        .joystick-thumb {
+            width: 55px;
+            height: 55px;
+            background: radial-gradient(circle, #00f3ff 0%, #0066ff 100%);
+            border-radius: 50%;
+            position: absolute;
+            top: 37.5px;
+            left: 37.5px;
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.8);
+            transition: transform 0.05s ease-out;
+        }
+
+        .action-buttons-cluster {
+            display: grid;
+            grid-template-columns: repeat(2, 65px);
+            gap: 12px;
+            pointer-events: auto;
+        }
+
+        .tactical-btn {
+            width: 65px;
+            height: 65px;
+            background: rgba(12, 18, 28, 0.85);
+            border: 2px solid rgba(0, 243, 255, 0.5);
+            border-radius: 12px;
+            color: #00f3ff;
+            font-weight: 800;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: all 0.1s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .tactical-btn:active, .tactical-btn.active {
+            background: #00f3ff;
+            color: #000;
+            transform: scale(0.95);
+            box-shadow: 0 0 15px #00f3ff;
+        }
+
+        .tactical-btn.primary {
+            border-color: #ffaa00;
+            color: #ffaa00;
+            grid-column: span 2;
+            width: 142px;
+            height: 55px;
+            border-radius: 8px;
+            font-size: 15px;
+            letter-spacing: 1px;
+        }
+        .tactical-btn.primary:active {
+            background: #ffaa00;
+            color: #000;
+            box-shadow: 0 0 15px #ffaa00;
+        }
+
+        /* Menus / Modals */
+        .modal-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 8, 13, 0.92);
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-title {
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: #00f3ff;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.6);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .modal-subtitle {
+            font-size: 16px;
+            color: #8fa4c0;
+            letter-spacing: 2px;
+            margin-bottom: 35px;
+            text-transform: uppercase;
+        }
+
+        .cyber-btn {
+            background: linear-gradient(135deg, #00f3ff 0%, #0066ff 100%);
+            border: none;
+            color: #000;
+            padding: 16px 45px;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            cursor: pointer;
+            clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.4);
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .cyber-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 35px rgba(0, 243, 255, 0.7);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Floating Damage Text */
+        .dmg-popup {
+            position: absolute;
+            font-family: monospace;
+            font-weight: 900;
+            font-size: 16px;
+            color: #ff3333;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            pointer-events: none;
+            animation: floatUp 0.6s ease-out forwards;
+            z-index: 25;
+        }
+        .dmg-popup.crit {
+            color: #ffaa00;
+            font-size: 20px;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-40px) scale(1.2); opacity: 0; }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;900&display=swap" rel="stylesheet">
 </head>
-<body class="min-h-screen flex items-center justify-center p-2 sm:p-6 bg-slate-950 text-slate-100">
+<body>
 
-  <!-- LOADING SPLASH SCREEN -->
-  <div id="splash-screen" class="fixed inset-0 bg-[#05080f] z-50 flex flex-col items-center justify-center space-y-6 transition-opacity duration-700">
-    <div class="relative flex items-center justify-center">
-      <div class="absolute w-24 h-24 rounded-full bg-blue-500/20 animate-ping"></div>
-      <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-2xl shadow-blue-500/40 relative z-10">
-        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-      </div>
-    </div>
-    <div class="text-center space-y-1">
-      <h2 class="text-xl font-extrabold tracking-widest text-white uppercase">CASH FLOW BANK</h2>
-      <p class="text-xs text-cyan-400 font-mono tracking-wider">Establishing Secure 256-Bit SSL Tunnel...</p>
-    </div>
-    <div class="w-48 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-      <div id="loader-bar" class="w-0 h-full bg-cyan-400 transition-all duration-700"></div>
-    </div>
-  </div>
+<div id="game-container">
+    <!-- Main SVG Render Engine -->
+    <svg id="svg-engine" viewBox="0 0 3000 3000" preserveAspectRatio="xMidYMid slice">
+        <!-- Definitions -->
+        <defs>
+            <radialGradient id="storm-grad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#ff0055" stop-opacity="0.05"/>
+                <stop offset="70%" stop-color="#ff0055" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#9900ff" stop-opacity="0.75"/>
+            </radialGradient>
+            <radialGradient id="player-glow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#00f3ff" stop-opacity="0.8"/>
+                <stop offset="100%" stop-color="#00f3ff" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feMerge>
+                    <feMergeNode in="blur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+        </defs>
 
-  <!-- MAIN APP CONTAINER -->
-  <div class="w-full max-w-md bg-white text-slate-900 rounded-[36px] shadow-2xl overflow-hidden border border-slate-800 flex flex-col relative min-h-[820px]">
-    
-    <!-- TOP HEADER -->
-    <header class="bg-slate-950 px-6 py-4 flex items-center justify-between border-b border-slate-800/80 z-20">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white font-extrabold shadow-lg shadow-cyan-500/20 text-lg">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-        </div>
-        <div>
-          <h1 class="text-white font-bold text-base tracking-wider leading-none">CASH FLOW BANK</h1>
-          <span class="text-[10px] text-cyan-400 font-semibold tracking-widest uppercase">Institutional Grade</span>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <button id="menu-drawer-btn" class="hidden p-2 rounded-xl bg-slate-900 text-slate-300 hover:text-white border border-slate-800 transition">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
-      </div>
-    </header>
+        <!-- World Group (Camera Transform) -->
+        <g id="world-group">
+            <!-- Tactical Grid & Ground Texture -->
+            <rect x="0" y="0" width="3000" height="3000" fill="#090e15" />
+            <g id="world-grid" stroke="#121c2c" stroke-width="2">
+                <!-- Generated dynamically via JS -->
+            </g>
 
-    <!-- CONTENT VIEWS CONTAINER -->
-    <div class="flex-1 p-5 sm:p-6 overflow-y-auto custom-scrollbar bg-slate-50 flex flex-col justify-between relative">
+            <!-- Structures & Compounds -->
+            <g id="structures-layer">
+                <!-- Military Bases / Compounds -->
+                <g fill="#0e1624" stroke="#1a283e" stroke-width="4">
+                    <rect x="500" y="500" width="400" height="300" rx="10"/>
+                    <rect x="2000" y="400" width="500" height="350" rx="10"/>
+                    <rect x="1200" y="1300" width="600" height="400" rx="10"/>
+                    <rect x="400" y="2100" width="450" height="350" rx="10"/>
+                    <rect x="1900" y="2000" width="400" height="450" rx="10"/>
+                </g>
+                <!-- Interior Details / Obstacles -->
+                <g fill="#141f32" stroke="#223450" stroke-width="2">
+                    <rect x="550" y="550" width="120" height="80"/>
+                    <rect x="730" y="550" width="120" height="80"/>
+                    <rect x="2100" y="480" width="150" height="90"/>
+                    <rect x="1350" y="1400" width="100" height="180"/>
+                    <rect x="1550" y="1400" width="100" height="180"/>
+                    <rect x="500" y="2200" width="140" height="90"/>
+                    <rect x="2050" y="2100" width="120" height="150"/>
+                </g>
+            </g>
 
-      <!-- VIEW 1: SIGN IN -->
-      <section id="view-signin" class="space-y-6 my-auto">
-        <div>
-          <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Client Portal Sign In</h2>
-          <p class="text-sm text-slate-500 mt-1">Access your institutional accounts and dashboards</p>
-        </div>
+            <!-- Loot Drops Layer -->
+            <g id="loot-layer"></g>
 
-        <form id="signin-form" class="space-y-4">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Account Number</label>
-            <input type="text" id="login-accnum" required placeholder="e.g. 4582588676" maxlength="10"
-              class="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-mono font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 transition text-sm shadow-sm">
-          </div>
+            <!-- Entities Layer (Bots & Player) -->
+            <g id="entities-layer"></g>
 
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Portal Password</label>
-            <input type="password" id="login-password" required placeholder="••••••••"
-              class="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 transition text-sm shadow-sm">
-          </div>
+            <!-- Bullets & Projectiles Layer -->
+            <g id="projectiles-layer"></g>
 
-          <button type="submit"
-            class="w-full py-4 px-6 bg-slate-950 hover:bg-slate-900 active:scale-[0.99] text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
-            <span>Secure Sign In</span>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-          </button>
-        </form>
+            <!-- Storm Hazard Zone (Shrinking Circle) -->
+            <circle id="storm-circle" cx="1500" cy="1500" r="1800" fill="url(#storm-grad)" stroke="#ff0055" stroke-width="8" />
+        </g>
+    </svg>
 
-        <div class="text-center pt-2 border-t border-slate-200">
-          <p class="text-sm text-slate-600 font-medium">
-            New customer? 
-            <button id="go-to-signup" class="text-blue-600 font-bold hover:underline ml-1">Open an Account</button>
-          </p>
-        </div>
-      </section>
-
-      <!-- VIEW 2: REGISTER -->
-      <section id="view-signup" class="space-y-4 my-auto hidden">
-        <div>
-          <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Open New Account</h2>
-          <p class="text-xs text-slate-500 mt-1">Join Cash Flow Bank for elite private banking</p>
-        </div>
-
-        <form id="signup-form" class="space-y-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Full Legal Name</label>
-            <input type="text" id="reg-fullname" required placeholder="Maro Ejiata"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:ring-2 focus:ring-blue-600 outline-none shadow-sm">
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
-            <input type="email" id="reg-email" required placeholder="maroejiata02@gmail.com"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:ring-2 focus:ring-blue-600 outline-none shadow-sm">
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Country of Residence</label>
-            <select id="reg-country" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:ring-2 focus:ring-blue-600 outline-none shadow-sm">
-              <option value="United States">United States</option>
-              <option value="United Kingdom">United Kingdom</option>
-              <option value="Canada">Canada</option>
-              <option value="Germany">Germany</option>
-              <option value="Nigeria">Nigeria</option>
-              <option value="United Arab Emirates">United Arab Emirates</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Secure Password</label>
-            <input type="password" id="reg-password" required placeholder="••••••••" minlength="6"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:ring-2 focus:ring-blue-600 outline-none shadow-sm">
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">4-Digit Security PIN</label>
-            <input type="text" id="reg-pin" maxlength="4" pattern="\d{4}" required placeholder="1234"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:ring-2 focus:ring-blue-600 outline-none shadow-sm">
-          </div>
-
-          <button type="submit"
-            class="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-xl shadow-lg transition text-sm mt-2">
-            Submit Account Application
-          </button>
-        </form>
-
-        <div class="text-center pt-1 border-t border-slate-200">
-          <p class="text-xs text-slate-600 font-medium">
-            Already have an account? 
-            <button id="go-to-signin" class="text-blue-600 font-bold hover:underline ml-1">Sign In</button>
-          </p>
-        </div>
-      </section>
-
-      <!-- VIEW 3: APPLICATION STATUS -->
-      <section id="view-status" class="space-y-6 text-center py-8 my-auto hidden">
-        <div class="w-20 h-20 mx-auto rounded-full bg-amber-50 flex items-center justify-center border-4 border-amber-100 text-amber-500 shadow-inner">
-          <svg class="w-10 h-10 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-
-        <div>
-          <h2 id="status-title" class="text-2xl font-bold text-slate-900">Application Under Review</h2>
-          <p class="text-sm text-slate-500 mt-2 max-w-xs mx-auto leading-relaxed">
-            Your application is currently being reviewed by our compliance team.
-          </p>
-        </div>
-
-        <div class="p-4 bg-slate-100 rounded-2xl border border-slate-200 text-left text-xs space-y-2">
-          <div class="flex justify-between"><span class="text-slate-500">Applicant:</span> <span id="status-user-name" class="font-bold text-slate-800">--</span></div>
-          <div class="flex justify-between"><span class="text-slate-500">Account ID:</span> <span id="status-user-id" class="font-mono font-bold text-slate-800">--</span></div>
-          <div class="flex justify-between"><span class="text-slate-500">Status:</span> <span id="status-badge-text" class="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded">PENDING</span></div>
-        </div>
-
-        <button id="btn-status-logout" class="px-6 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition">
-          Return to Login
-        </button>
-      </section>
-
-      <!-- VIEW 4: MAIN DASHBOARD (Exact Match to Screenshot) -->
-      <section id="view-dashboard" class="space-y-5 hidden">
-        
-        <!-- Profile Banner -->
-        <div class="flex items-center justify-between p-3 bg-white rounded-2xl border border-slate-200/80 shadow-sm">
-          <div class="flex items-center gap-3">
-            <div id="dash-avatar-box" class="w-12 h-12 rounded-full bg-slate-200 border-2 border-slate-300 overflow-hidden flex items-center justify-center text-slate-600 font-bold">
-              <svg class="w-8 h-8 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+    <!-- Tactical HUD Overlays -->
+    <div class="hud-overlay">
+        <div class="hud-top">
+            <div class="hud-top-left">
+                <div class="squad-status">
+                    <div class="squad-title">OPERATIVES ALIVE</div>
+                    <div class="squad-count" id="ui-alive">25</div>
+                </div>
+                <div class="match-telemetry">
+                    <div class="telemetry-label">ZONE COLLAPSE</div>
+                    <div class="telemetry-val" id="ui-storm-timer">02:00</div>
+                </div>
             </div>
-            <div>
-              <h3 id="dash-user-name" class="font-bold text-slate-900 text-base leading-snug">Steve kenan</h3>
-              <p class="text-xs text-slate-500 font-medium">Account ID: <span id="dash-user-id" class="font-mono text-slate-700 font-bold">4582588676</span></p>
+            <!-- Mini-map Radar -->
+            <div class="minimap-container">
+                <svg id="minimap-svg" viewBox="0 0 3000 3000">
+                    <rect x="0" y="0" width="3000" height="3000" fill="#080c12" />
+                    <!-- Render mini structures -->
+                    <g fill="#1a283e">
+                        <rect x="500" y="500" width="400" height="300"/>
+                        <rect x="2000" y="400" width="500" height="350"/>
+                        <rect x="1200" y="1300" width="600" height="400"/>
+                        <rect x="400" y="2100" width="450" height="350"/>
+                        <rect x="1900" y="2000" width="400" height="450"/>
+                    </g>
+                    <!-- Mini Storm Circle -->
+                    <circle id="mini-storm" cx="1500" cy="1500" r="1800" fill="none" stroke="#ff0055" stroke-width="25" />
+                    <!-- Mini Entities -->
+                    <g id="mini-entities"></g>
+                </svg>
             </div>
-          </div>
-          <div class="text-right">
-            <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-extrabold rounded-full tracking-wider uppercase block">ACTIVE</span>
-            <span id="dash-created-date" class="text-[10px] text-slate-400 font-medium block mt-1">Since: 2024-01-15</span>
-          </div>
         </div>
 
-        <!-- Checking Balance Debit Card (Ref: Screenshot) -->
-        <div class="relative bg-gradient-to-b from-[#111927] to-[#0A0F18] text-white p-5 rounded-3xl shadow-xl border border-slate-800 overflow-hidden space-y-4">
-          <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-          <div class="flex justify-between items-start">
-            <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Checking Balance</span>
-            <span class="text-xs font-black tracking-widest text-slate-200 uppercase">DEBIT CARD</span>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <span id="dash-balance" class="text-3xl font-extrabold text-white tracking-tight">$500,000.00</span>
-            <button id="toggle-balance-btn" class="p-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition">
-              <svg id="eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-            </button>
-          </div>
-
-          <hr class="border-slate-800">
-
-          <div class="space-y-1.5 text-xs font-mono">
-            <div class="flex justify-between text-slate-400">
-              <span class="text-[10px] tracking-wider uppercase">ROUTING (ABA):</span>
-              <span id="dash-routing" class="text-slate-200 font-bold">021000021</span>
+        <div class="hud-bottom">
+            <div class="player-status-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:13px; font-weight:800; color:#00f3ff; letter-spacing:1px;">OPERATOR // GHOST</span>
+                    <span id="ui-kills" style="font-size:12px; font-weight:700; color:#ffaa00;">KILLS: 0</span>
+                </div>
+                <div class="health-bar-bg">
+                    <div class="health-bar-fill" id="ui-hp-fill"></div>
+                </div>
+                <div class="shield-bar-bg">
+                    <div class="shield-bar-fill" id="ui-shield-fill"></div>
+                </div>
             </div>
-            <div class="flex justify-between text-slate-400">
-              <span class="text-[10px] tracking-wider uppercase">SWIFT / BIC:</span>
-              <span id="dash-swift" class="text-slate-200 font-bold">CSFLUS33XXX</span>
+
+            <div class="weapon-hud-card">
+                <div>
+                    <div class="weapon-name" id="ui-weapon-name">Assault Rifle</div>
+                    <div style="font-size:10px; color:#8fa4c0; letter-spacing:1px;">TACTICAL LOADOUT</div>
+                </div>
+                <div class="weapon-ammo" id="ui-ammo">30/90</div>
             </div>
-            <div class="flex justify-between text-slate-400">
-              <span class="text-[10px] tracking-wider uppercase">IBAN:</span>
-              <span id="dash-iban" class="text-slate-200 font-bold text-[11px]">US64 CSFL 0210 0000 1000</span>
-            </div>
-          </div>
-
-          <div class="pt-2 flex justify-between items-center text-xs font-semibold border-t border-slate-800/60">
-            <span class="text-[10px] text-slate-400 uppercase tracking-wider">DAILY TRANSFER LIMIT:</span>
-            <span id="dash-limit" class="text-[#facc15] font-bold font-mono">$1,000,000.00</span>
-          </div>
         </div>
-
-        <!-- Action Buttons matching Reference (Transfer, Deposit, History) -->
-        <div class="grid grid-cols-3 gap-3">
-          <button id="btn-action-transfer" class="p-3 bg-white border border-slate-200 rounded-2xl flex flex-col items-center gap-2 hover:bg-slate-100 transition shadow-sm active:scale-95">
-            <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 11l5-5m0 0l5 5m-5-5v12"/></svg>
-            </div>
-            <span class="text-xs font-bold text-slate-800">Transfer</span>
-          </button>
-
-          <button id="btn-action-deposit" class="p-3 bg-white border border-slate-200 rounded-2xl flex flex-col items-center gap-2 hover:bg-slate-100 transition shadow-sm active:scale-95">
-            <div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 13l-5 5m0 0l-5-5m5 5V6"/></svg>
-            </div>
-            <span class="text-xs font-bold text-slate-800">Deposit</span>
-          </button>
-
-          <button id="btn-action-history" class="p-3 bg-white border border-slate-200 rounded-2xl flex flex-col items-center gap-2 hover:bg-slate-100 transition shadow-sm active:scale-95">
-            <div class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-            </div>
-            <span class="text-xs font-bold text-slate-800">History</span>
-          </button>
-        </div>
-
-        <!-- FINANCIAL ANALYSIS AT THE BOTTOM -->
-        <div class="p-4 bg-[#0e1424] rounded-3xl border border-slate-800 text-white space-y-4">
-          <div class="flex justify-between items-center">
-            <div>
-              <h4 class="font-bold text-sm text-white">Financial Analysis</h4>
-              <p class="text-[11px] text-slate-400">Cash flow trajectories & spending</p>
-            </div>
-            <span class="px-2.5 py-1 bg-emerald-950/80 border border-emerald-800 text-emerald-400 text-[10px] font-bold rounded-full flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live Sync
-            </span>
-          </div>
-
-          <!-- Chart.js Canvas -->
-          <div class="h-44 w-full relative">
-            <canvas id="analysisChart"></canvas>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- VIEW 5: TRANSFER VIEW -->
-      <section id="view-transfer" class="space-y-4 hidden">
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-bold text-slate-900 tracking-tight">Make Transfer</h2>
-          <button id="back-to-dash-btn" class="text-xs text-blue-600 font-bold hover:underline">Dashboard</button>
-        </div>
-
-        <form id="transfer-form" class="space-y-3.5 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Transfer Network</label>
-            <select class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-xs">
-              <option>Local Domestic Transfer (ACH / Wire)</option>
-              <option>International SWIFT Wire</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Beneficiary Full Name</label>
-            <input type="text" id="tr-beneficiary" required placeholder="e.g. Sarah Jenkins"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-xs outline-none">
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Recipient Bank Name</label>
-            <input type="text" id="tr-bankname" required placeholder="e.g. Chase Bank / Barclays"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-xs outline-none">
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Account Number / IBAN</label>
-            <input type="text" id="tr-accnum" required placeholder="e.g. 0098765432"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-xs font-mono outline-none">
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Transfer Amount ($)</label>
-            <input type="number" step="0.01" id="tr-amount" required placeholder="0.00"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm font-bold outline-none">
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">4-Digit Security PIN</label>
-            <input type="password" maxlength="4" pattern="\d{4}" id="tr-pin" required placeholder="••••"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-xs tracking-widest outline-none">
-          </div>
-
-          <button type="submit" class="w-full py-3.5 bg-slate-950 hover:bg-slate-900 text-white font-bold rounded-xl shadow-lg transition text-xs mt-2">
-            Execute Secure Transfer
-          </button>
-        </form>
-      </section>
-
-      <!-- VIEW 6: PROFILE SETUP -->
-      <section id="view-profile" class="space-y-4 hidden">
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-bold text-slate-900 tracking-tight">Profile & Avatar</h2>
-          <button id="back-to-dash-btn2" class="text-xs text-blue-600 font-bold hover:underline">Dashboard</button>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 text-center">
-          <div class="w-24 h-24 mx-auto rounded-full border-4 border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center">
-            <img id="profile-preview-img" src="" class="w-full h-full object-cover hidden">
-            <svg id="profile-preview-svg" class="w-12 h-12 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-2">Upload Custom Avatar Image</label>
-            <input type="file" id="avatar-file-input" accept="image/*" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 cursor-pointer">
-          </div>
-
-          <button id="save-profile-btn" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl text-xs shadow hover:bg-blue-500 transition">
-            Save Profile Avatar
-          </button>
-        </div>
-      </section>
-
-      <!-- VIEW 7: HISTORY -->
-      <section id="view-history" class="space-y-4 hidden">
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-bold text-slate-900 tracking-tight">Transaction Ledger</h2>
-          <button id="back-to-dash-btn3" class="text-xs text-blue-600 font-bold hover:underline">Dashboard</button>
-        </div>
-        <div id="transactions-list" class="space-y-2.5">
-          <div class="p-4 bg-white rounded-2xl border border-slate-200 text-xs text-slate-500 text-center">
-            No recent transactions found.
-          </div>
-        </div>
-      </section>
-
-      <div class="pt-4 text-center text-[10px] text-slate-400 border-t border-slate-200 mt-4">
-        CASH FLOW BANK N.A. MEMBER FDIC • 256-BIT SSL ENCRYPTION
-      </div>
-
-    </div>
-  </div>
-
-  <!-- NAVIGATION DRAWER -->
-  <div id="drawer-backdrop" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-40 hidden transition-opacity"></div>
-  <div id="nav-drawer" class="fixed top-0 left-0 bottom-0 w-80 bg-white text-slate-900 z-50 transform -translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
-    <div class="p-5 bg-slate-950 text-white flex items-center justify-between border-b border-slate-800">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-xs">CF</div>
-        <span class="font-bold text-sm tracking-wide">CASHFLOWBANK</span>
-      </div>
-      <button id="drawer-close" class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white">&times;</button>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-4 space-y-6 text-xs font-semibold text-slate-700">
-      <div class="space-y-1">
-        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3">Main</span>
-        <button onclick="navigateDrawer('dashboard')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 text-slate-900">Dashboard</button>
-        <button onclick="navigateDrawer('history')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100">Account Summary</button>
-        <button onclick="navigateDrawer('transfer')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-100">Transfer</button>
-      </div>
-
-      <div class="space-y-1">
-        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3">Account</span>
-        <button onclick="navigateDrawer('profile')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100">Profile & Avatar</button>
-      </div>
+    <!-- On-screen Mobile / Tactical Controls -->
+    <div class="mobile-controls" id="mobile-controls">
+        <div class="virtual-joystick" id="joystick">
+            <div class="joystick-thumb" id="joystick-thumb"></div>
+        </div>
+        <div class="action-buttons-cluster">
+            <button class="tactical-btn" id="btn-reload">RELOAD</button>
+            <button class="tactical-btn" id="btn-switch">SWAP</button>
+            <button class="tactical-btn primary" id="btn-fire">FIRE / ATTACK</button>
+        </div>
     </div>
 
-    <div class="p-4 border-t border-slate-200">
-      <button id="drawer-signout" class="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 font-bold text-xs">Sign Out</button>
+    <!-- Start Menu Screen -->
+    <div id="start-screen" class="modal-screen">
+        <div class="modal-title">TACTICAL STRIKE</div>
+        <div class="modal-subtitle">SVG Mobile Battle Royale Engine</div>
+        <button class="cyber-btn" id="start-btn">DEPLOY INTO ZONE</button>
     </div>
-  </div>
 
-  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+    <!-- Game Over Screen -->
+    <div id="gameover-screen" class="modal-screen hidden">
+        <div class="modal-title" id="gameover-title" style="color:#ff3333;">MISSION FAILED</div>
+        <div class="modal-subtitle" id="gameover-stats">Eliminated in the hazard zone</div>
+        <button class="cyber-btn" id="restart-btn">DEPLOY AGAIN</button>
+    </div>
+</div>
 
-  <!-- FIREBASE & APP LOGIC -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDocs, collection, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+<script>
+    // --- GAME ENGINE STATE & CONFIG ---
+    const WORLD_SIZE = 3000;
+    let gameRunning = false;
+    let matchTime = 120; // 2 mins collapse timer
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCtQe-xad1yv28K7duodAgtjRp62UESmrM",
-      authDomain: "cashflowbank990.firebaseapp.com",
-      projectId: "cashflowbank990",
-      storageBucket: "cashflowbank990.firebasestorage.app",
-      messagingSenderId: "111898987558",
-      appId: "1:111898987558:web:1a3281cdb6b57ee39a6ae7"
+    const weapons = {
+        ar: { name: "M4A1 Assault", damage: 24, fireRate: 120, ammoMax: 30, range: 800, spread: 0.08 },
+        shotgun: { name: "Striker Shotgun", damage: 15, fireRate: 600, ammoMax: 8, range: 450, spread: 0.35, pellets: 6 },
+        smg: { name: "Vector SMG", damage: 16, fireRate: 80, ammoMax: 35, range: 550, spread: 0.12 }
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    let player = {
+        x: 1500,
+        y: 1500,
+        radius: 18,
+        speed: 4.5,
+        hp: 100,
+        maxHp: 100,
+        shield: 50,
+        maxShield: 50,
+        angle: 0,
+        weapon: 'ar',
+        ammo: 30,
+        reserveAmmo: 90,
+        kills: 0,
+        isFiring: false,
+        lastShot: 0
+    };
 
-    let currentUserData = null;
-    let balanceVisible = true;
-    let userUnsubscribe = null;
-    let uploadedAvatarBase64 = "";
-    let analysisChartInstance = null;
+    let bots = [];
+    let lootDrops = [];
+    let bullets = [];
+    let damagePopups = [];
 
-    // Splash Loader Animation
-    window.addEventListener('load', () => {
-      setTimeout(() => { document.getElementById('loader-bar').style.width = '100%'; }, 200);
-      setTimeout(() => {
-        const splash = document.getElementById('splash-screen');
-        splash.classList.add('opacity-0');
-        setTimeout(() => splash.remove(), 700);
-      }, 1000);
+    let storm = {
+        x: 1500,
+        y: 1500,
+        radius: 1600,
+        targetRadius: 200,
+        shrinkSpeed: 0.35
+    };
+
+    let keys = {};
+    let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2, down: false };
+    let joystickState = { active: false, id: null, startX: 0, startY: 0, dx: 0, dy: 0 };
+
+    // --- INITIALIZATION ---
+    function initWorld() {
+        // Build grid lines
+        const gridGroup = document.getElementById('world-grid');
+        let gridHtml = '';
+        for (let i = 0; i <= WORLD_SIZE; i += 200) {
+            gridHtml += `<line x1="${i}" y1="0" x2="${i}" y2="${WORLD_SIZE}" />`;
+            gridHtml += `<line x1="0" y1="${i}" x2="${WORLD_SIZE}" y2="${i}" />`;
+        }
+        gridGroup.innerHTML = gridHtml;
+
+        // Spawn Bots (24 enemies for 25 player BR)
+        bots = [];
+        for (let i = 0; i < 24; i++) {
+            bots.push({
+                id: i,
+                x: 300 + Math.random() * (WORLD_SIZE - 600),
+                y: 300 + Math.random() * (WORLD_SIZE - 600),
+                radius: 18,
+                speed: 2.2 + Math.random() * 1.5,
+                hp: 100,
+                maxHp: 100,
+                angle: Math.random() * Math.PI * 2,
+                weapon: Math.random() > 0.5 ? 'ar' : 'smg',
+                ammo: 30,
+                state: 'roam',
+                stateTimer: 0,
+                targetX: 1500,
+                targetY: 1500,
+                lastShot: 0
+            });
+        }
+
+        // Spawn Loot Crates
+        lootDrops = [];
+        for (let i = 0; i < 35; i++) {
+            lootDrops.push({
+                x: 200 + Math.random() * (WORLD_SIZE - 400),
+                y: 200 + Math.random() * (WORLD_SIZE - 400),
+                type: Math.random() > 0.6 ? 'shotgun' : (Math.random() > 0.3 ? 'shield' : 'ammo')
+            });
+        }
+    }
+
+    // --- INPUT LISTENERS ---
+    window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+    window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+    window.addEventListener('mousemove', e => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+        updatePlayerAim();
     });
 
-    function showToast(message, type = 'info') {
-      const toast = document.createElement('div');
-      const bg = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-emerald-600' : 'bg-slate-900';
-      toast.className = `${bg} text-white px-4 py-3 rounded-xl shadow-lg text-xs font-medium transition-all duration-300 opacity-0 transform translate-y-2`;
-      toast.innerText = message;
-      document.getElementById('toast-container').appendChild(toast);
-      setTimeout(() => toast.classList.remove('opacity-0', 'translate-y-2'), 10);
-      setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.remove(), 300); }, 3500);
+    window.addEventListener('mousedown', e => {
+        if (e.target.tagName === 'BUTTON' || e.target.closest('.modal-screen') || e.target.closest('.mobile-controls')) return;
+        mouse.down = true;
+        player.isFiring = true;
+    });
+
+    window.addEventListener('mouseup', () => {
+        mouse.down = false;
+        player.isFiring = false;
+    });
+
+    // Touch / Virtual Joystick Handlers
+    const joystick = document.getElementById('joystick');
+    const thumb = document.getElementById('joystick-thumb');
+
+    joystick.addEventListener('touchstart', e => {
+        const touch = e.touches[0];
+        joystickState.active = true;
+        joystickState.id = touch.identifier;
+        const rect = joystick.getBoundingClientRect();
+        joystickState.startX = rect.left + rect.width / 2;
+        joystickState.startY = rect.top + rect.height / 2;
+        handleTouchMove(touch);
+    });
+
+    window.addEventListener('touchmove', e => {
+        if (!joystickState.active) return;
+        for (let i = 0; i < e.touches.length; i++) {
+            if (e.touches[i].identifier === joystickState.id) {
+                handleTouchMove(e.touches[i]);
+            }
+        }
+    });
+
+    window.addEventListener('touchend', e => {
+        if (!joystickState.active) return;
+        let released = true;
+        for (let i = 0; i < e.touches.length; i++) {
+            if (e.touches[i].identifier === joystickState.id) released = false;
+        }
+        if (released) {
+            joystickState.active = false;
+            joystickState.dx = 0;
+            joystickState.dy = 0;
+            thumb.style.transform = `translate(0px, 0px)`;
+        }
+    });
+
+    function handleTouchMove(touch) {
+        let dx = touch.clientX - joystickState.startX;
+        let dy = touch.clientY - joystickState.startY;
+        const dist = Math.hypot(dx, dy);
+        const maxDist = 45;
+        if (dist > maxDist) {
+            dx = (dx / dist) * maxDist;
+            dy = (dy / dist) * maxDist;
+        }
+        thumb.style.transform = `translate(${dx}px, ${dy}px)`;
+        joystickState.dx = dx / maxDist;
+        joystickState.dy = dy / maxDist;
     }
 
-    function switchView(target) {
-      ['view-signin', 'view-signup', 'view-status', 'view-dashboard', 'view-transfer', 'view-profile', 'view-history'].forEach(id => {
-        document.getElementById(id).classList.add('hidden');
-      });
-      document.getElementById(target).classList.remove('hidden');
+    // UI Buttons
+    document.getElementById('btn-fire').addEventListener('touchstart', () => player.isFiring = true);
+    document.getElementById('btn-fire').addEventListener('touchend', () => player.isFiring = false);
+    document.getElementById('btn-fire').addEventListener('mousedown', () => player.isFiring = true);
+    document.getElementById('btn-fire').addEventListener('mouseup', () => player.isFiring = false);
 
-      const menuBtn = document.getElementById('menu-drawer-btn');
-      if (['view-dashboard', 'view-transfer', 'view-profile', 'view-history'].includes(target)) {
-        menuBtn.classList.remove('hidden');
-        if (target === 'view-dashboard') setTimeout(initChart, 100);
-      } else {
-        menuBtn.classList.add('hidden');
-      }
-      closeDrawer();
+    document.getElementById('btn-reload').addEventListener('click', reloadWeapon);
+    document.getElementById('btn-switch').addEventListener('click', switchWeapon);
+
+    document.getElementById('start-btn').addEventListener('click', startGame);
+    document.getElementById('restart-btn').addEventListener('click', startGame);
+
+    function startGame() {
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('gameover-screen').classList.add('hidden');
+        player.x = 1500;
+        player.y = 1500;
+        player.hp = 100;
+        player.shield = 50;
+        player.kills = 0;
+        player.ammo = weapons[player.weapon].ammoMax;
+        player.reserveAmmo = 120;
+        matchTime = 120;
+        storm.radius = 1600;
+        initWorld();
+        gameRunning = true;
     }
 
-    window.navigateDrawer = (viewKey) => {
-      if (viewKey === 'dashboard') switchView('view-dashboard');
-      if (viewKey === 'transfer') switchView('view-transfer');
-      if (viewKey === 'profile') switchView('view-profile');
-      if (viewKey === 'history') switchView('view-history');
-    };
+    function updatePlayerAim() {
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight / 2;
+        player.angle = Math.atan2(mouse.y - cy, mouse.x - cx);
+    }
 
-    const drawer = document.getElementById('nav-drawer');
-    const backdrop = document.getElementById('drawer-backdrop');
-    function openDrawer() { drawer.classList.remove('-translate-x-full'); backdrop.classList.remove('hidden'); }
-    function closeDrawer() { drawer.classList.add('-translate-x-full'); backdrop.classList.add('hidden'); }
+    function switchWeapon() {
+        const keysList = Object.keys(weapons);
+        let idx = keysList.indexOf(player.weapon);
+        idx = (idx + 1) % keysList.length;
+        player.weapon = keysList[idx];
+        player.ammo = weapons[player.weapon].ammoMax;
+        document.getElementById('ui-weapon-name').innerText = weapons[player.weapon].name;
+        updateHUD();
+    }
 
-    document.getElementById('menu-drawer-btn').onclick = openDrawer;
-    document.getElementById('drawer-close').onclick = closeDrawer;
-    document.getElementById('drawer-backdrop').onclick = closeDrawer;
+    function reloadWeapon() {
+        const w = weapons[player.weapon];
+        let needed = w.ammoMax - player.ammo;
+        if (needed <= 0 || player.reserveAmmo <= 0) return;
+        let take = Math.min(needed, player.reserveAmmo);
+        player.ammo += take;
+        player.reserveAmmo -= take;
+        updateHUD();
+    }
 
-    // Login
-    document.getElementById('signin-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const accNum = document.getElementById('login-accnum').value.trim();
-      const password = document.getElementById('login-password').value;
+    // --- COMBAT & PROJECTILES ---
+    function fireWeapon(shooter, isPlayer = false) {
+        const now = Date.now();
+        const w = weapons[shooter.weapon];
+        if (now - shooter.lastShot < w.fireRate) return;
+        if (shooter.ammo <= 0) {
+            if (isPlayer) reloadWeapon();
+            return;
+        }
 
-      try {
-        const querySnapshot = await getDocs(collection(db, "users"));
-        let found = null;
-        querySnapshot.forEach(docSnap => {
-          const u = docSnap.data();
-          if (u.accountNumber === accNum && u.password === password) found = u;
+        shooter.ammo--;
+        shooter.lastShot = now;
+        if (isPlayer) updateHUD();
+
+        const pellets = w.pellets || 1;
+        for (let i = 0; i < pellets; i++) {
+            const spreadAngle = shooter.angle + (Math.random() - 0.5) * w.spread;
+            bullets.push({
+                x: shooter.x + Math.cos(shooter.angle) * 25,
+                y: shooter.y + Math.sin(shooter.angle) * 25,
+                vx: Math.cos(spreadAngle) * 16,
+                vy: Math.sin(spreadAngle) * 16,
+                damage: w.damage,
+                range: w.range,
+                traveled: 0,
+                isPlayer: isPlayer
+            });
+        }
+    }
+
+    function spawnDamagePopup(x, y, dmg, isCrit = false) {
+        const el = document.createElement('div');
+        el.className = `dmg-popup ${isCrit ? 'crit' : ''}`;
+        el.innerText = Math.round(dmg);
+        // Convert world to screen space
+        const screenX = x - player.x + window.innerWidth / 2;
+        const screenY = y - player.y + window.innerHeight / 2;
+        el.style.left = `${screenX}px`;
+        el.style.top = `${screenY}px`;
+        document.getElementById('game-container').appendChild(el);
+        setTimeout(() => el.remove(), 600);
+    }
+
+    // --- MAIN GAME LOOP ---
+    let lastTime = performance.now();
+    function gameLoop(time) {
+        if (!gameRunning) return;
+        const dt = (time - lastTime) / 1000;
+        lastTime = time;
+
+        update(dt);
+        render();
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    function update(dt) {
+        // Match Timer & Storm Collapse
+        matchTime -= dt;
+        if (matchTime <= 0) matchTime = 0;
+        let mins = Math.floor(matchTime / 60);
+        let secs = Math.floor(matchTime % 60);
+        document.getElementById('ui-storm-timer').innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+
+        if (storm.radius > storm.targetRadius) {
+            storm.radius -= storm.shrinkSpeed;
+        }
+
+        // Player Movement
+        let dx = 0, dy = 0;
+        if (keys['w'] || keys['arrowup']) dy -= 1;
+        if (keys['s'] || keys['arrowdown']) dy += 1;
+        if (keys['a'] || keys['arrowleft']) dx -= 1;
+        if (keys['d'] || keys['arrowright']) dx += 1;
+
+        if (joystickState.active) {
+            dx = joystickState.dx;
+            dy = joystickState.dy;
+        }
+
+        if (dx !== 0 && dy !== 0) {
+            const len = Math.hypot(dx, dy);
+            dx /= len;
+            dy /= len;
+        }
+
+        player.x += (dx !== 0 || dy !== 0) ? dx * player.speed : 0;
+        player.y += (dy !== 0 || dy !== 0) ? dy * player.speed : 0;
+
+        // World Bounds
+        player.x = Math.max(player.radius, Math.min(WORLD_SIZE - player.radius, player.x));
+        player.y = Math.max(player.radius, Math.min(WORLD_SIZE - player.radius, player.y));
+
+        if (!joystickState.active && !keys['w'] && !keys['s'] && !keys['a'] && !keys['d']) {
+            updatePlayerAim();
+        } else if (dx !== 0 || dy !== 0) {
+            player.angle = Math.atan2(dy, dx);
+        }
+
+        if (player.isFiring) {
+            fireWeapon(player, true);
+        }
+
+        // Storm Damage Check
+        const distToStormCenter = Math.hypot(player.x - storm.x, player.y - storm.y);
+        if (distToStormCenter > storm.radius) {
+            player.hp -= dt * 10;
+            if (player.hp <= 0) triggerGameOver(false);
+        }
+
+        // Update Bots AI
+        bots.forEach(bot => {
+            if (bot.hp <= 0) return;
+
+            const distToPlayer = Math.hypot(player.x - bot.x, player.y - bot.y);
+
+            // Bot FSM State
+            if (distToPlayer < 650) {
+                bot.state = 'combat';
+                bot.targetX = player.x;
+                bot.targetY = player.y;
+                bot.angle = Math.atan2(player.y - bot.y, player.x - bot.x);
+                if (distToPlayer < 450) {
+                    fireWeapon(bot, false);
+                }
+            } else {
+                bot.state = 'roam';
+                bot.stateTimer -= dt;
+                if (bot.stateTimer <= 0) {
+                    bot.stateTimer = 4 + Math.random() * 4;
+                    bot.targetX = bot.x + (Math.random() - 0.5) * 800;
+                    bot.targetY = bot.y + (Math.random() - 0.5) * 800;
+                }
+                bot.angle = Math.atan2(bot.targetY - bot.y, bot.targetX - bot.x);
+            }
+
+            // Move bot
+            const moveAngle = Math.atan2(bot.targetY - bot.y, bot.targetX - bot.x);
+            bot.x += Math.cos(moveAngle) * bot.speed;
+            bot.y += Math.sin(moveAngle) * bot.speed;
+
+            // Bot Storm Check
+            if (Math.hypot(bot.x - storm.x, bot.y - storm.y) > storm.radius) {
+                bot.hp -= dt * 15;
+                if (bot.hp <= 0) {
+                    bot.hp = 0;
+                    checkAliveCount();
+                }
+            }
         });
 
-        if (found) {
-          showToast("Signed in successfully!", "success");
-          listenToUser(found.accountNumber);
+        // Update Bullets
+        for (let i = bullets.length - 1; i >= 0; i--) {
+            let b = bullets[i];
+            b.x += b.vx;
+            b.y += b.vy;
+            b.traveled += Math.hypot(b.vx, b.vy);
+
+            if (b.traveled >= b.range || b.x < 0 || b.x > WORLD_SIZE || b.y < 0 || b.y > WORLD_SIZE) {
+                bullets.splice(i, 1);
+                continue;
+            }
+
+            // Collision with Player
+            if (!b.isPlayer && Math.hypot(b.x - player.x, b.y - player.y) < player.radius) {
+                let dmg = b.damage;
+                if (player.shield > 0) {
+                    player.shield -= dmg;
+                    if (player.shield < 0) {
+                        player.hp += player.shield;
+                        player.shield = 0;
+                    }
+                } else {
+                    player.hp -= dmg;
+                }
+                spawnDamagePopup(player.x, player.y, dmg);
+                bullets.splice(i, 1);
+                updateHUD();
+                if (player.hp <= 0) triggerGameOver(false);
+                continue;
+            }
+
+            // Collision with Bots
+            if (b.isPlayer) {
+                let hitBot = false;
+                for (let j = 0; j < bots.length; j++) {
+                    let bot = bots[j];
+                    if (bot.hp > 0 && Math.hypot(b.x - bot.x, b.y - bot.y) < bot.radius) {
+                        bot.hp -= b.damage;
+                        spawnDamagePopup(bot.x, bot.y, b.damage, Math.random() > 0.8);
+                        hitBot = true;
+                        if (bot.hp <= 0) {
+                            player.kills++;
+                            document.getElementById('ui-kills').innerText = `KILLS: ${player.kills}`;
+                            checkAliveCount();
+                        }
+                        break;
+                    }
+                }
+                if (hitBot) {
+                    bullets.splice(i, 1);
+                    continue;
+                }
+            }
+        }
+
+        // Loot Pickup Collision
+        for (let i = lootDrops.length - 1; i >= 0; i--) {
+            let l = lootDrops[i];
+            if (Math.hypot(player.x - l.x, player.y - l.y) < 35) {
+                if (l.type === 'shield') {
+                    player.shield = Math.min(player.maxShield, player.shield + 25);
+                } else if (l.type === 'ammo') {
+                    player.reserveAmmo += 40;
+                } else if (l.type === 'shotgun') {
+                    player.weapon = 'shotgun';
+                    player.ammo = weapons['shotgun'].ammoMax;
+                    document.getElementById('ui-weapon-name').innerText = weapons['shotgun'].name;
+                }
+                lootDrops.splice(i, 1);
+                updateHUD();
+            }
+        }
+    }
+
+    function checkAliveCount() {
+        const aliveBots = bots.filter(b => b.hp > 0).length;
+        const totalAlive = aliveBots + 1;
+        document.getElementById('ui-alive').innerText = totalAlive;
+        if (aliveBots === 0) {
+            triggerGameOver(true);
+        }
+    }
+
+    function triggerGameOver(victory) {
+        gameRunning = false;
+        const screen = document.getElementById('gameover-screen');
+        const title = document.getElementById('gameover-title');
+        const stats = document.getElementById('gameover-stats');
+        screen.classList.remove('hidden');
+
+        if (victory) {
+            title.innerText = "VICTORY ROYALE";
+            title.style.color = "#00f3ff";
+            stats.innerText = `Eliminations: ${player.kills} | Winner Winner, Chicken Dinner!`;
         } else {
-          showToast("Invalid Account Number or Password.", "error");
+            title.innerText = "MISSION FAILED";
+            title.style.color = "#ff3333";
+            stats.innerText = `Eliminated in the hazard zone. Kills: ${player.kills}`;
         }
-      } catch (err) {
-        showToast("Login error: " + err.message, "error");
-      }
-    });
-
-    // Signup
-    document.getElementById('signup-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const fullName = document.getElementById('reg-fullname').value.trim();
-      const email = document.getElementById('reg-email').value.trim();
-      const country = document.getElementById('reg-country').value;
-      const password = document.getElementById('reg-password').value;
-      const pin = document.getElementById('reg-pin').value;
-
-      const accNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
-      const iban = "US64 CSFL " + accNumber.slice(0, 4) + " " + accNumber.slice(4, 8) + " 1000";
-      const createdDate = new Date().toISOString().split('T')[0];
-
-      const newUser = {
-        accountNumber: accNumber,
-        fullName,
-        email,
-        country,
-        password,
-        pin,
-        balance: 500000.00,
-        status: "PENDING",
-        routing: "021000021",
-        swift: "CSFLUS33XXX",
-        iban,
-        dailyLimit: 1000000.00,
-        createdAt: createdDate,
-        avatar: "",
-        transactions: []
-      };
-
-      try {
-        await setDoc(doc(db, "users", accNumber), newUser);
-        showToast("Application submitted successfully!", "success");
-        listenToUser(accNumber);
-      } catch (err) {
-        showToast("Registration error: " + err.message, "error");
-      }
-    });
-
-    function listenToUser(accNum) {
-      if (userUnsubscribe) userUnsubscribe();
-
-      userUnsubscribe = onSnapshot(doc(db, "users", accNum), (docSnap) => {
-        if (!docSnap.exists()) {
-          showToast("Account removed.", "error");
-          switchView('view-signin');
-          return;
-        }
-
-        const data = docSnap.data();
-        currentUserData = data;
-
-        if (data.status === 'PENDING' || data.status === 'DECLINED') {
-          document.getElementById('status-user-name').innerText = data.fullName;
-          document.getElementById('status-user-id').innerText = data.accountNumber;
-          document.getElementById('status-badge-text').innerText = data.status;
-          switchView('view-status');
-        } else if (data.status === 'ACTIVE') {
-          updateDashboardUI(data);
-          if (!document.getElementById('view-signin').classList.contains('hidden') ||
-              !document.getElementById('view-signup').classList.contains('hidden') ||
-              !document.getElementById('view-status').classList.contains('hidden')) {
-            switchView('view-dashboard');
-          }
-        }
-      });
     }
 
-    function updateDashboardUI(data) {
-      document.getElementById('dash-user-name').innerText = data.fullName;
-      document.getElementById('dash-user-id').innerText = data.accountNumber;
-      document.getElementById('dash-created-date').innerText = `Since: ${data.createdAt || '2024-01-01'}`;
-      
-      const formattedBalance = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(data.balance || 0);
-      document.getElementById('dash-balance').innerText = balanceVisible ? formattedBalance : '••••••••';
-      
-      if (data.avatar) {
-        document.getElementById('dash-avatar-box').innerHTML = `<img src="${data.avatar}" class="w-full h-full object-cover">`;
-        document.getElementById('profile-preview-img').src = data.avatar;
-        document.getElementById('profile-preview-img').classList.remove('hidden');
-        document.getElementById('profile-preview-svg').classList.add('hidden');
-      }
-
-      // Transactions Ledger
-      const tList = document.getElementById('transactions-list');
-      if (data.transactions && data.transactions.length > 0) {
-        tList.innerHTML = data.transactions.map(t => `
-          <div class="p-3 bg-white rounded-2xl border border-slate-200 flex items-center justify-between text-xs">
-            <div>
-              <div class="font-bold text-slate-900">${t.title}</div>
-              <div class="text-[10px] text-slate-400">${t.date} • ${t.bank || ''}</div>
-            </div>
-            <div class="font-bold ${t.type === 'credit' ? 'text-emerald-600' : 'text-slate-900'}">
-              ${t.type === 'credit' ? '+' : '-'}$${Number(t.amount).toLocaleString()}
-            </div>
-          </div>
-        `).join('');
-      }
+    function updateHUD() {
+        document.getElementById('ui-hp-fill').style.width = `${Math.max(0, (player.hp / player.maxHp) * 100)}%`;
+        document.getElementById('ui-shield-fill').style.width = `${Math.max(0, (player.shield / player.maxShield) * 100)}%`;
+        document.getElementById('ui-ammo').innerText = `${player.ammo}/${player.reserveAmmo}`;
     }
 
-    function initChart() {
-      const ctx = document.getElementById('analysisChart');
-      if (!ctx) return;
-      if (analysisChartInstance) analysisChartInstance.destroy();
+    // --- RENDER ENGINE (SVG DOM) ---
+    function render() {
+        // Camera Follow Player
+        const camX = window.innerWidth / 2 - player.x;
+        const camY = window.innerHeight / 2 - player.y;
+        document.getElementById('world-group').setAttribute('transform', `translate(${camX}, ${camY})`);
 
-      analysisChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-          datasets: [{
-            label: 'Liquidity Trend',
-            data: [12000, 15500, 19000, 21000, 22500, currentUserData ? currentUserData.balance / 20 : 25000],
-            borderColor: '#ef4444',
-            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-            fill: true,
-            tension: 0.4,
-            borderWidth: 3,
-            pointRadius: 4,
-            pointBackgroundColor: '#ef4444'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 10 } } },
-            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 10 } } }
-          }
-        }
-      });
-    }
+        // Update Storm Circle SVG attribute
+        const stormEl = document.getElementById('storm-circle');
+        stormEl.setAttribute('r', storm.radius);
 
-    document.getElementById('toggle-balance-btn').addEventListener('click', () => {
-      balanceVisible = !balanceVisible;
-      if (currentUserData) updateDashboardUI(currentUserData);
-    });
+        const miniStorm = document.getElementById('mini-storm');
+        miniStorm.setAttribute('r', storm.radius);
 
-    document.getElementById('avatar-file-input').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          uploadedAvatarBase64 = event.target.result;
-          document.getElementById('profile-preview-img').src = uploadedAvatarBase64;
-          document.getElementById('profile-preview-img').classList.remove('hidden');
-          document.getElementById('profile-preview-svg').classList.add('hidden');
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    document.getElementById('save-profile-btn').addEventListener('click', async () => {
-      if (!currentUserData) return;
-      try {
-        await updateDoc(doc(db, "users", currentUserData.accountNumber), { avatar: uploadedAvatarBase64 });
-        showToast("Profile avatar updated!", "success");
-      } catch (err) {
-        showToast("Error updating avatar: " + err.message, "error");
-      }
-    });
-
-    document.getElementById('transfer-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!currentUserData) return;
-
-      const amount = parseFloat(document.getElementById('tr-amount').value);
-      const pin = document.getElementById('tr-pin').value;
-      const beneficiary = document.getElementById('tr-beneficiary').value;
-      const bankName = document.getElementById('tr-bankname').value;
-
-      if (pin !== currentUserData.pin) { showToast("Invalid security PIN.", "error"); return; }
-      if (amount > currentUserData.balance) { showToast("Insufficient balance.", "error"); return; }
-
-      const newBalance = currentUserData.balance - amount;
-      const newTx = { title: `Transfer to ${beneficiary}`, bank: bankName, amount, type: 'debit', date: new Date().toLocaleDateString() };
-
-      try {
-        await updateDoc(doc(db, "users", currentUserData.accountNumber), {
-          balance: newBalance,
-          transactions: [newTx, ...(currentUserData.transactions || [])]
+        // Render Loot Crates
+        let lootHtml = '';
+        lootDrops.forEach(l => {
+            let color = l.type === 'shield' ? '#ffaa00' : (l.type === 'shotgun' ? '#ff0055' : '#00f3ff');
+            lootHtml += `<g transform="translate(${l.x}, ${l.y})">
+                <rect x="-10" y="-10" width="20" height="20" fill="${color}" rx="4" stroke="#fff" stroke-width="2"/>
+                <circle cx="0" cy="0" r="4" fill="#090e15"/>
+            </g>`;
         });
-        showToast("Transfer executed successfully!", "success");
-        switchView('view-dashboard');
-      } catch (err) {
-        showToast("Transfer failed: " + err.message, "error");
-      }
-    });
+        document.getElementById('loot-layer').innerHTML = lootHtml;
 
-    document.getElementById('go-to-signup').onclick = () => switchView('view-signup');
-    document.getElementById('go-to-signin').onclick = () => switchView('view-signin');
-    document.getElementById('btn-status-logout').onclick = () => { if(userUnsubscribe) userUnsubscribe(); switchView('view-signin'); };
-    document.getElementById('drawer-signout').onclick = () => { if(userUnsubscribe) userUnsubscribe(); currentUserData=null; switchView('view-signin'); };
+        // Render Entities (Player & Bots)
+        let entitiesHtml = '';
+        let miniEntitiesHtml = '';
 
-    document.getElementById('btn-action-transfer').onclick = () => switchView('view-transfer');
-    document.getElementById('btn-action-deposit').onclick = () => showToast("Deposit routing instructions sent.");
-    document.getElementById('btn-action-history').onclick = () => switchView('view-history');
+        // Bots
+        bots.forEach(b => {
+            if (b.hp <= 0) return;
+            entitiesHtml += `<g transform="translate(${b.x}, ${b.y})">
+                <circle cx="0" cy="0" r="${b.radius}" fill="#162235" stroke="#ff3333" stroke-width="3"/>
+                <line x1="0" y1="0" x2="${Math.cos(b.angle)*24}" y2="${Math.sin(b.angle)*24}" stroke="#ff3333" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="0" cy="0" r="6" fill="#ff3333"/>
+            </g>`;
+            miniEntitiesHtml += `<circle cx="${b.x}" cy="${b.y}" r="25" fill="#ff3333"/>`;
+        });
 
-    document.getElementById('back-to-dash-btn').onclick = () => switchView('view-dashboard');
-    document.getElementById('back-to-dash-btn2').onclick = () => switchView('view-dashboard');
-    document.getElementById('back-to-dash-btn3').onclick = () => switchView('view-dashboard');
-  </script>
+        // Player
+        entitiesHtml += `<g transform="translate(${player.x}, ${player.y})">
+            <circle cx="0" cy="0" r="35" fill="url(#player-glow)"/>
+            <circle cx="0" cy="0" r="${player.radius}" fill="#0d1522" stroke="#00f3ff" stroke-width="4"/>
+            <line x1="0" y1="0" x2="${Math.cos(player.angle)*28}" y2="${Math.sin(player.angle)*28}" stroke="#00f3ff" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="0" cy="0" r="7" fill="#00f3ff"/>
+        </g>`;
+        miniEntitiesHtml += `<circle cx="${player.x}" cy="${player.y}" r="35" fill="#00f3ff"/>`;
+
+        document.getElementById('entities-layer').innerHTML = entitiesHtml;
+        document.getElementById('mini-entities').innerHTML = miniEntitiesHtml;
+
+        // Render Bullets
+        let bulletsHtml = '';
+        bullets.forEach(b => {
+            let col = b.isPlayer ? '#00f3ff' : '#ff3333';
+            bulletsHtml += `<line x1="${b.x}" y1="${b.y}" x2="${b.x - b.vx}" y2="${b.y - b.vy}" stroke="${col}" stroke-width="3" stroke-linecap="round"/>`;
+        });
+        document.getElementById('projectiles-layer').innerHTML = bulletsHtml;
+    }
+
+    // Initialize display on load
+    initWorld();
+    updateHUD();
+</script>
 </body>
 </html>
